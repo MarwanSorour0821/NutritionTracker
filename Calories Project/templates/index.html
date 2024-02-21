@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calorie Calculator</title>
+</head>
+<body>
+    <h1>Calorie Calculator</h1>
+    <form id="search-form">
+        <label for="food-input">Search for food:</label>
+        <input type="text" id="food-input" name="food" required>
+        <button type="submit">Search</button>
+    </form>
+    <div id="food-details" style="display: none;">
+        <h2 id="food-name"></h2>
+        <ul id="nutritional-facts"></ul>
+        <label for="serving-size">Enter serving size:</label>
+        <input type="number" id="serving-size" name="serving-size" required>
+        <button id="add-food-btn" type="button">Add to Daily Intake</button>
+        <button id="continue-search-btn" type="button">Continue Searching</button>
+    </div>
+    <div id="response"></div>
+
+    <script>
+        document.getElementById("search-form").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const foodInput = document.getElementById("food-input").value;
+            fetch(`/getFood/${foodInput}`)
+                .then(response => response.json())
+                .then(data => {
+                    const foodDetails = document.getElementById("food-details");
+                    const foodName = document.getElementById("food-name");
+                    const nutritionalFacts = document.getElementById("nutritional-facts");
+                    const responseDiv = document.getElementById("response");
+                    if (data.length > 0) {
+                        foodName.textContent = data[0].name;
+                        nutritionalFacts.innerHTML = `
+                            <li>Protein: ${data[0].protein_g} g</li>
+                            <li>Fat: ${data[0].fat_total_g} g</li>
+                            <li>Carbohydrates: ${data[0].carbohydrates_total_g} g</li>
+                            <li>Calories: ${data[0].calories} kcal</li>
+                        `;
+                        foodDetails.style.display = "block";
+                    } else {
+                        responseDiv.textContent = "Food not found";
+                    }
+                })
+                .catch(error => console.error("Error:", error));
+        });
+
+        document.getElementById("add-food-btn").addEventListener("click", function() {
+            const servingSize = document.getElementById("serving-size").value;
+            const foodName = document.getElementById("food-name").textContent;
+            fetch(`/addFood/${foodName}/${servingSize}`, { method: "POST" })
+                .then(response => response.json())
+                .then(data => console.log("Food added to daily intake:", data))
+                .catch(error => console.error("Error:", error));
+        });
+
+        document.getElementById("continue-search-btn").addEventListener("click", function() {
+            document.getElementById("food-details").style.display = "none";
+            document.getElementById("response").textContent = "";
+            document.getElementById("search-form").reset();
+        });
+    </script>
+</body>
+</html>
+
+
